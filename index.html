@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Watermark Photo Generator</title>
+    <!-- Mengimpor Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Watermark Photo Generator</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Form untuk mengunggah gambar dan menambahkan watermark -->
+                <div class="card">
+                    <div class="card-body">
+                        <form id="watermarkForm">
+                            <div class="form-group">
+                                <label for="imageInput">Pilih Gambar:</label>
+                                <input type="file" class="form-control-file" id="imageInput" accept="image/*" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="watermarkText">Teks Watermark:</label>
+                                <input type="text" class="form-control" id="watermarkText" placeholder="Watermark Text"
+                                    value="Zero Invitation" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="positionX">Posisi X:</label>
+                                <input type="range" class="form-control-range" id="positionX" min="0" max="500"
+                                    value="150">
+                                <span id="positionXValue">150</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="positionY">Posisi Y:</label>
+                                <input type="range" class="form-control-range" id="positionY" min="0" max="500"
+                                    value="150">
+                                <span id="positionYValue">150</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="horizontalSpacing">Jarak Horizontal:</label>
+                                <input type="range" class="form-control-range" id="horizontalSpacing" min="0" max="500"
+                                    value="50">
+                                <span id="horizontalSpacingValue">50</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="verticalSpacing">Jarak Vertikal:</label>
+                                <input type="range" class="form-control-range" id="verticalSpacing" min="0" max="500"
+                                    value="100">
+                                <span id="verticalSpacingValue">100</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="repeatCount">Jumlah Loop:</label>
+                                <input type="number" class="form-control" id="repeatCount" placeholder="Repeat Count"
+                                    value="100" required>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="addWatermark()">Tambah
+                                Watermark</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <!-- Gambar preview sebelum dan sesudah watermark -->
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="text-center">Preview Sebelum dan Sesudah Watermark</h2>
+                        <img id="previewImage" class="img-fluid" style="display: none;">
+                        <a id="downloadLink" href="#" download="watermarked_image.jpg" style="display: none;">Unduh
+                            Gambar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mengimpor Bootstrap JavaScript (Opsional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        document.getElementById('imageInput').addEventListener('change', previewImage);
+
+        // Mendengarkan perubahan nilai input range posisi X
+        document.getElementById('positionX').addEventListener('input', function () {
+            document.getElementById('positionXValue').textContent = this.value;
+            addWatermark();
+        });
+
+        // Mendengarkan perubahan nilai input range posisi Y
+        document.getElementById('positionY').addEventListener('input', function () {
+            document.getElementById('positionYValue').textContent = this.value;
+            addWatermark();
+        });
+
+        // Mendengarkan perubahan nilai input range jarak horizontal
+        document.getElementById('horizontalSpacing').addEventListener('input', function () {
+            document.getElementById('horizontalSpacingValue').textContent = this.value;
+            addWatermark();
+        });
+
+        // Mendengarkan perubahan nilai input range jarak vertikal
+        document.getElementById('verticalSpacing').addEventListener('input', function () {
+            document.getElementById('verticalSpacingValue').textContent = this.value;
+            addWatermark();
+        });
+
+        function previewImage() {
+            const imageInput = document.getElementById('imageInput');
+            const previewImage = document.getElementById('previewImage');
+
+            if (imageInput.files.length === 0) {
+                alert('Mohon pilih gambar.');
+                return;
+            }
+
+            const image = new Image();
+            image.onload = function () {
+                previewImage.src = URL.createObjectURL(imageInput.files[0]);
+                previewImage.style.display = 'block';
+            };
+
+            image.src = URL.createObjectURL(imageInput.files[0]);
+        }
+
+        function addWatermark() {
+            const imageInput = document.getElementById('imageInput');
+            const watermarkText = document.getElementById('watermarkText').value;
+            const positionX = parseInt(document.getElementById('positionX').value);
+            const positionY = parseInt(document.getElementById('positionY').value);
+            const horizontalSpacing = parseInt(document.getElementById('horizontalSpacing').value);
+            const verticalSpacing = parseInt(document.getElementById('verticalSpacing').value);
+            const repeatCount = parseInt(document.getElementById('repeatCount').value);
+
+            if (imageInput.files.length === 0 || !watermarkText || isNaN(repeatCount) || repeatCount < 1) {
+                alert('Mohon isi semua field dengan benar.');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const image = new Image();
+            const previewImage = document.getElementById('previewImage');
+            const downloadLink = document.getElementById('downloadLink');
+
+            image.onload = function () {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                ctx.drawImage(image, 0, 0);
+
+                ctx.font = '24px Arial';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+
+                const watermarkWidth = ctx.measureText(watermarkText).width;
+                const watermarkHeight = 24; // Tinggi teks watermark (ganti sesuai kebutuhan)
+
+                for (let i = 0; i < repeatCount; i++) {
+                    for (let j = 0; j < repeatCount; j++) {
+                        const posX = positionX + i * (watermarkWidth + horizontalSpacing);
+                        const posY = positionY + j * (watermarkHeight + verticalSpacing);
+                        ctx.fillText(watermarkText, posX, posY);
+                    }
+                }
+
+                // Mengatur src gambar preview dengan gambar hasil watermark
+                previewImage.src = canvas.toDataURL('image/jpeg');
+                previewImage.style.display = 'block';
+
+                // Mengatur tautan unduhan
+                downloadLink.href = canvas.toDataURL('image/jpeg');
+                downloadLink.style.display = 'block';
+            };
+
+            image.src = URL.createObjectURL(imageInput.files[0]);
+        }
+    </script>
+</body>
+
+</html>
